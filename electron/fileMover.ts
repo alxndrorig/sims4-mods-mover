@@ -19,7 +19,7 @@ async function uniquePath(targetDir: string, filename: string): Promise<string> 
 function resolveTarget(item: ScanItem, config: Config): string | null {
   switch (item.type) {
     case 'mod':
-      return path.join(config.modsDir, item.relativePath || '', path.basename(item.path));
+      return path.join(config.modsDir, path.basename(item.path));
     case 'tray':
       return path.join(config.trayDir, path.basename(item.path));
     case 'save':
