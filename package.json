@@ -1,0 +1,47 @@
+{
+  "name": "sims4-mods-mover",
+  "version": "0.1.0",
+  "description": "Portable Electron app to organize The Sims 4 mods/tray/saves",
+  "main": "dist/electron/main.js",
+  "author": "",
+  "license": "MIT",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:renderer\" \"npm:dev:electron\"",
+    "dev:renderer": "vite dev --host",
+    "dev:electron": "cross-env TS_NODE_PROJECT=tsconfig.main.json TS_NODE_TRANSPILE_ONLY=1 VITE_DEV_SERVER_URL=http://localhost:5173 electron electron/dev-entry.js",
+    "build": "npm run build:main && npm run build:renderer",
+    "build:main": "tsc -p tsconfig.main.json",
+    "build:renderer": "vite build",
+    "dist": "npm run build && electron-builder",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "7zip-bin": "^5.2.0",
+    "adm-zip": "^0.5.16",
+    "chokidar": "^4.0.1",
+    "electron": "^28.0.0",
+    "fs-extra": "^11.2.0",
+    "node-7z": "^3.0.0",
+    "path": "^0.12.7",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@types/adm-zip": "^0.5.6",
+    "@types/chokidar": "^2.1.3",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.7.5",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.2",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron-builder": "^24.13.3",
+    "rimraf": "^5.0.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.9"
+  }
+}

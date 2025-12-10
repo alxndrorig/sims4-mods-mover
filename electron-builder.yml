@@ -1,0 +1,18 @@
+appId: com.example.simsorganizer
+productName: Sims4ModsMover
+directories:
+  output: dist/release
+  buildResources: build
+files:
+  - dist/**/*
+  - package.json
+asar: false
+extraResources:
+  - from: config.json
+    to: .
+win:
+  target: portable
+  icon: build/icon.ico
+portable:
+  artifactName: "SimsOrganizerPortable.exe"
+publish: null
