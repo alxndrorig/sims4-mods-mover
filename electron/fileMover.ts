@@ -59,13 +59,18 @@ export async function moveFiles(
     }
 
     if (item.type === 'archive') {
-      const extracted = await extractArchive(item.path, config.tempDir, log);
-      const nestedResult = await scanFolder(extracted, config, log);
-      const nestedOps = await moveFiles(nestedResult.items, config, log, onProgress);
-      operations.push(...nestedOps);
-      // очищаем исходный архив и временную распаковку
-      await fs.remove(item.path).catch(() => undefined);
-      await fs.remove(extracted).catch(() => undefined);
+      try {
+        const extracted = await extractArchive(item.path, config.tempDir, log);
+        const nestedResult = await scanFolder(extracted, config, log);
+        const nestedOps = await moveFiles(nestedResult.items, config, log, onProgress);
+        operations.push(...nestedOps);
+        // очищаем исходный архив и временную распаковку
+        await fs.remove(item.path).catch(() => undefined);
+        await fs.remove(extracted).catch(() => undefined);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        log?.(`Ошибка распаковки ${item.path}: ${message}`, 'error');
+      }
       notify(item.path);
       continue;
     }
