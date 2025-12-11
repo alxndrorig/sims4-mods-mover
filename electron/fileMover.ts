@@ -60,57 +60,18 @@ export async function moveFiles(
     }
 
     if (item.type === 'archive') {
-      let mode: 'all' | 'first' | 'skip' = config.nestedArchiveMode === 'skip' ? 'skip' : (config.nestedArchiveMode as any) || 'all';
-
-      // режим обработки вложенных архивов: all (по умолчанию), first, skip
-      if (mode === 'skip') {
-        const destArchive = await uniquePath(config.modsDir, path.basename(item.path));
-        await fs.ensureDir(path.dirname(destArchive));
-        await fs.move(item.path, destArchive, { overwrite: false });
-        operations.push({ from: item.path, to: destArchive, type: 'archive' });
-        log?.(`Архив перемещен без распаковки: ${item.path} -> ${destArchive}`);
-        notify(item.path);
-        continue;
+      try {
+        const extracted = await extractArchive(item.path, config.tempDir, log);
+        const nestedResult = await scanFolder(extracted, config, log);
+        const nestedOps = await moveFiles(nestedResult.items, config, log, onProgress);
+        operations.push(...nestedOps);
+        // очищаем исходный архив и временную распаковку
+        await fs.remove(item.path).catch(() => undefined);
+        await fs.remove(extracted).catch(() => undefined);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        log?.(`Ошибка распаковки ${item.path}: ${message}`, 'error');
       }
-
-      const extracted = await extractArchive(item.path, config.tempDir, log);
-
-      let nestedAllowed: string[] | undefined = undefined;
-
-      if (config.nestedArchiveMode === 'prompt' && requestNestedSelection) {
-        const nestedList = await findNestedArchives(extracted, new Set<string>());
-        if (nestedList.length > 1) {
-          const decision = await requestNestedSelection(nestedList);
-          if (typeof decision === 'string') {
-            mode = decision;
-          } else {
-            nestedAllowed = decision.selected;
-            mode = nestedAllowed.length === 0 ? 'skip' : 'first';
-          }
-        }
-      }
-
-      if (mode === 'first') {
-        const nested = nestedAllowed ?? (await findNestedArchives(extracted, new Set<string>()));
-        if (nested.length > 1) {
-          const keepList = nestedAllowed ?? [nested[0]];
-          const keepSet = new Set(keepList);
-          const toRemove = nested.filter((n) => !keepSet.has(n));
-          for (const rem of toRemove) {
-            await fs.remove(rem).catch(() => undefined);
-          }
-          log?.(
-            `Вложенные архивы: выбрано ${keepList.length} из ${nested.length}, удалено ${toRemove.length} остальных`
-          );
-        }
-      }
-
-      const nestedResult = await scanFolder(extracted, config, log);
-      const nestedOps = await moveFiles(nestedResult.items, config, log, onProgress);
-      operations.push(...nestedOps);
-      // очищаем исходный архив и временную распаковку
-      await fs.remove(item.path).catch(() => undefined);
-      await fs.remove(extracted).catch(() => undefined);
       notify(item.path);
       continue;
     }

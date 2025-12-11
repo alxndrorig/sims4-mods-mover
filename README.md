@@ -50,7 +50,7 @@ win:
   target: portable
   icon: build/icon.ico
 portable:
-  artifactName: "ModsMover.exe"
+  artifactName: "ModsMoverPortable.exe"
 ```
 - Готовый файл появится в `dist/release`.
 

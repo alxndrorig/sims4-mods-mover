@@ -28,6 +28,9 @@ async function createWindow() {
     }
   });
 
+  // Регистрируем IPC до загрузки renderer, чтобы renderer не успел дернуть invoke без handler
+  await registerIpcHandlers(mainWindow);
+
   const devServer = process.env.VITE_DEV_SERVER_URL;
   if (devServer) {
     await waitForDevServer(devServer);
@@ -41,8 +44,6 @@ async function createWindow() {
     shell.openExternal(url);
     return { action: 'deny' };
   });
-
-  await registerIpcHandlers(mainWindow);
 }
 
 async function waitForDevServer(url: string, retries = 30, delayMs = 200) {
