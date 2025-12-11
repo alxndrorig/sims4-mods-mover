@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { extractArchive } from './archiveExtractor';
+import { extractArchive, findNestedArchives } from './archiveExtractor';
 import { scanFolder } from './fileScanner';
 import { Config, LogLevel, MoveOperation, ProgressEvent, ScanItem } from './types';
 
@@ -59,7 +59,32 @@ export async function moveFiles(
     }
 
     if (item.type === 'archive') {
+      // режим обработки вложенных архивов: all (по умолчанию), first, skip
+      if (config.nestedArchiveMode === 'skip') {
+        const destArchive = await uniquePath(config.modsDir, path.basename(item.path));
+        await fs.ensureDir(path.dirname(destArchive));
+        await fs.move(item.path, destArchive, { overwrite: false });
+        operations.push({ from: item.path, to: destArchive, type: 'archive' });
+        log?.(`Архив перемещен без распаковки: ${item.path} -> ${destArchive}`);
+        notify(item.path);
+        continue;
+      }
+
       const extracted = await extractArchive(item.path, config.tempDir, log);
+
+      if (config.nestedArchiveMode === 'first') {
+        const nested = await findNestedArchives(extracted, new Set<string>());
+        if (nested.length > 1) {
+          // оставляем только первый, остальные удаляем, чтобы не обрабатывать
+          const keep = nested[0];
+          const toRemove = nested.slice(1);
+          for (const rem of toRemove) {
+            await fs.remove(rem).catch(() => undefined);
+          }
+          log?.(`Вложенные архивы: выбран только первый ${keep}, удалено ${toRemove.length} остальных`);
+        }
+      }
+
       const nestedResult = await scanFolder(extracted, config, log);
       const nestedOps = await moveFiles(nestedResult.items, config, log, onProgress);
       operations.push(...nestedOps);

@@ -28,7 +28,7 @@ async function extractSingle(archivePath: string, dest: string, log?: (message: 
   log?.(`Распакован архив ${archivePath} -> ${dest}`);
 }
 
-async function findNestedArchives(folder: string, seen: Set<string>): Promise<string[]> {
+export async function findNestedArchives(folder: string, seen: Set<string>): Promise<string[]> {
   const results: string[] = [];
   const entries = await fs.readdir(folder, { withFileTypes: true });
   for (const entry of entries) {

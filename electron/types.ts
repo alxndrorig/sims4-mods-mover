@@ -40,6 +40,7 @@ export interface Config {
   savesDir: string;
   tempDir: string;
   watcherEnabled: boolean;
+  nestedArchiveMode?: 'all' | 'first' | 'skip';
 }
 
 export interface ProgressEvent {

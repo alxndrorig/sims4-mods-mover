@@ -4,7 +4,6 @@ import { useAppStore } from "./store/appStore";
 import Summary from "./components/Summary";
 import FileTable from "./components/FileTable";
 import Settings from "./components/Settings";
-import Logs from "./components/Logs";
 import ProgressBar from "./components/ProgressBar";
 import { FileType } from "../../electron/types";
 
@@ -18,10 +17,8 @@ function App() {
     summary,
     filter,
     setFilter,
-    addLog,
     setSummary,
     setProgress,
-    logs,
     progress,
     loading,
     config,
@@ -31,11 +28,10 @@ function App() {
 
   useEffect(() => {
     init();
-    ipcClient.onLog((log) => addLog(log));
     ipcClient.onProgress((event) => setProgress(event));
     ipcClient.onSummary((s) => setSummary(s));
     return () => ipcClient.cleanup();
-  }, [init, addLog, setProgress, setSummary]);
+  }, [init, setProgress, setSummary]);
 
   useEffect(() => {
     setFilter(selectedType);
@@ -93,10 +89,6 @@ function App() {
 
       <div className="card" style={{ marginBottom: 12 }}>
         <FileTable items={filteredItems} typeFilter={filter} />
-      </div>
-
-      <div className="card">
-        <Logs logs={logs} />
       </div>
     </div>
   );

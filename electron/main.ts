@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell } from 'electron';
+import { app, BrowserWindow, shell, Menu } from 'electron';
 import path from 'path';
 import fs from 'fs-extra';
 import { registerIpcHandlers } from './ipcHandlers';
@@ -16,6 +16,7 @@ function resolvePreload() {
 
 async function createWindow() {
   await fs.ensureDir(path.join(app.getPath('userData'), 'logs'));
+  Menu.setApplicationMenu(null);
 
   mainWindow = new BrowserWindow({
     width: 1200,

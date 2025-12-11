@@ -50,6 +50,21 @@ export default function Settings() {
         </div>
       </label>
       <label className="grid" style={{ gap: 4 }}>
+        <span>Вложенные архивы (вариант обработки)</span>
+        <select
+          value={config.nestedArchiveMode || "all"}
+          onChange={(e) =>
+            updateConfig({ nestedArchiveMode: e.target.value as any })
+          }
+        >
+          <option value="all">Распаковывать все</option>
+          <option value="first">Распаковывать только первый вложенный</option>
+          <option value="skip">
+            Не распаковывать (перемещать архив как есть)
+          </option>
+        </select>
+      </label>
+      <label className="grid" style={{ gap: 4 }}>
         <span>Папка Sims 4 (Documents/Electronic Arts/The Sims 4)</span>
         <input
           value={config.simsRoot}
