@@ -50,7 +50,7 @@ win:
   target: portable
   icon: build/icon.ico
 portable:
-  artifactName: "SimsOrganizerPortable.exe"
+  artifactName: "ModsMover.exe"
 ```
 - Готовый файл появится в `dist/release`.
 

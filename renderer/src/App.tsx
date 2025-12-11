@@ -5,6 +5,7 @@ import Summary from "./components/Summary";
 import FileTable from "./components/FileTable";
 import Settings from "./components/Settings";
 import ProgressBar from "./components/ProgressBar";
+import { NestedArchiveModal } from "./components/NestedArchiveModal";
 import { FileType } from "../../electron/types";
 
 function App() {
@@ -90,6 +91,7 @@ function App() {
       <div className="card" style={{ marginBottom: 12 }}>
         <FileTable items={filteredItems} typeFilter={filter} />
       </div>
+      <NestedArchiveModal />
     </div>
   );
 }

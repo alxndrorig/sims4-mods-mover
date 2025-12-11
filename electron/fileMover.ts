@@ -33,7 +33,8 @@ export async function moveFiles(
   items: ScanItem[],
   config: Config,
   log?: (message: string, level?: LogLevel) => void,
-  onProgress?: (event: ProgressEvent) => void
+  onProgress?: (event: ProgressEvent) => void,
+  requestNestedSelection?: (archives: string[]) => Promise<'all' | 'first' | 'skip' | { selected: string[] }>
 ): Promise<MoveOperation[]> {
   const operations: MoveOperation[] = [];
   let processed = 0;
@@ -59,8 +60,10 @@ export async function moveFiles(
     }
 
     if (item.type === 'archive') {
+      let mode: 'all' | 'first' | 'skip' = config.nestedArchiveMode === 'skip' ? 'skip' : (config.nestedArchiveMode as any) || 'all';
+
       // режим обработки вложенных архивов: all (по умолчанию), first, skip
-      if (config.nestedArchiveMode === 'skip') {
+      if (mode === 'skip') {
         const destArchive = await uniquePath(config.modsDir, path.basename(item.path));
         await fs.ensureDir(path.dirname(destArchive));
         await fs.move(item.path, destArchive, { overwrite: false });
@@ -72,16 +75,33 @@ export async function moveFiles(
 
       const extracted = await extractArchive(item.path, config.tempDir, log);
 
-      if (config.nestedArchiveMode === 'first') {
-        const nested = await findNestedArchives(extracted, new Set<string>());
+      let nestedAllowed: string[] | undefined = undefined;
+
+      if (config.nestedArchiveMode === 'prompt' && requestNestedSelection) {
+        const nestedList = await findNestedArchives(extracted, new Set<string>());
+        if (nestedList.length > 1) {
+          const decision = await requestNestedSelection(nestedList);
+          if (typeof decision === 'string') {
+            mode = decision;
+          } else {
+            nestedAllowed = decision.selected;
+            mode = nestedAllowed.length === 0 ? 'skip' : 'first';
+          }
+        }
+      }
+
+      if (mode === 'first') {
+        const nested = nestedAllowed ?? (await findNestedArchives(extracted, new Set<string>()));
         if (nested.length > 1) {
-          // оставляем только первый, остальные удаляем, чтобы не обрабатывать
-          const keep = nested[0];
-          const toRemove = nested.slice(1);
+          const keepList = nestedAllowed ?? [nested[0]];
+          const keepSet = new Set(keepList);
+          const toRemove = nested.filter((n) => !keepSet.has(n));
           for (const rem of toRemove) {
             await fs.remove(rem).catch(() => undefined);
           }
-          log?.(`Вложенные архивы: выбран только первый ${keep}, удалено ${toRemove.length} остальных`);
+          log?.(
+            `Вложенные архивы: выбрано ${keepList.length} из ${nested.length}, удалено ${toRemove.length} остальных`
+          );
         }
       }
 

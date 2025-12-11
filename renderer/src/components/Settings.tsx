@@ -107,6 +107,22 @@ export default function Settings() {
           <button onClick={() => chooseFolder("savesDir")}>Выбрать</button>
         </div>
       </label>
+      <label className="grid" style={{ gap: 4 }}>
+        <span>Вложенные архивы (вариант обработки)</span>
+        <select
+          value={config.nestedArchiveMode || "all"}
+          onChange={(e) =>
+            updateConfig({ nestedArchiveMode: e.target.value as any })
+          }
+        >
+          <option value="all">Распаковывать все</option>
+          <option value="first">Распаковывать только первый вложенный</option>
+          <option value="skip">
+            Не распаковывать (перемещать архив как есть)
+          </option>
+          <option value="prompt">Спрашивать при каждом архиве</option>
+        </select>
+      </label>
       <label
         className="flex"
         style={{ justifyContent: "space-between", alignItems: "center" }}

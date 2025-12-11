@@ -10,6 +10,7 @@ interface AppState {
   progress?: ProgressEvent;
   filter: FileType | 'all';
   loading: boolean;
+  nestedModal?: { requestId: string; archives: string[] };
   init: () => Promise<void>;
   scan: () => Promise<ScanResult | undefined>;
   moveAll: () => Promise<void>;
@@ -19,6 +20,9 @@ interface AppState {
   addLog: (log: LogMessage) => void;
   setSummary: (summary: ScanSummary) => void;
   setProgress: (progress?: ProgressEvent) => void;
+  setNestedModal: (requestId: string, archives: string[]) => void;
+  clearNestedModal: () => void;
+  respondNestedArchives: (selection: string[]) => Promise<void>;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -26,6 +30,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   logs: [],
   filter: 'all',
   loading: false,
+  nestedModal: undefined,
   init: async () => {
     const config = await ipcClient.getConfig();
     set({ config });
@@ -67,5 +72,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   setFilter: (type) => set({ filter: type }),
   addLog: (log) => set((state) => ({ logs: [log, ...state.logs].slice(0, 500) })),
   setSummary: (summary) => set({ summary }),
-  setProgress: (progress) => set({ progress })
+  setProgress: (progress) => set({ progress }),
+  setNestedModal: (requestId, archives) => set({ nestedModal: { requestId, archives } }),
+  clearNestedModal: () => set({ nestedModal: undefined }),
+  respondNestedArchives: async (selection) => {
+    const { nestedModal } = get();
+    if (!nestedModal) return;
+    await ipcClient.chooseNestedArchives({ requestId: nestedModal.requestId, selected: selection });
+    set({ nestedModal: undefined });
+  }
 }));

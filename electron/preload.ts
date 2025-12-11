@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { Config, LogMessage, ProgressEvent, ScanItem, ScanResult, ScanSummary } from './types';
+import { NestedArchivesRequest, NestedArchivesSelection } from '../renderer/src/api/types';
 
 type Listener<T> = (payload: T) => void;
 
@@ -15,6 +16,10 @@ const api = {
   onLog: (cb: Listener<LogMessage>) => ipcRenderer.on('log', (_event, payload) => cb(payload)),
   onProgress: (cb: Listener<ProgressEvent>) => ipcRenderer.on('progress', (_event, payload) => cb(payload)),
   onSummary: (cb: Listener<ScanSummary>) => ipcRenderer.on('summary', (_event, payload) => cb(payload)),
+  onNestedArchives: (cb: Listener<NestedArchivesRequest>) =>
+    ipcRenderer.on('nested-archives', (_event, payload) => cb(payload)),
+  chooseNestedArchives: (payload: NestedArchivesSelection) =>
+    ipcRenderer.invoke('nested-archives-selection', payload),
   removeAllListeners: (channel: string) => ipcRenderer.removeAllListeners(channel)
 };
 
