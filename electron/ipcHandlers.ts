@@ -5,7 +5,7 @@ import { moveFiles } from './fileMover';
 import { scanFolder } from './fileScanner';
 import { startWatcher, stopWatcher } from './watcher';
 import { Config, LogMessage, ScanItem } from './types';
-import { nanoid } from 'nanoid';
+import { randomUUID } from 'node:crypto';
 
 let configCache: Config;
 
@@ -91,7 +91,7 @@ const pendingNestedResolvers = new Map<string, (selection: string[]) => void>();
 
 async function waitNestedSelection(mainWindow: BrowserWindow, archives: string[]): Promise<'all' | 'first' | 'skip'> {
   if (!archives.length) return 'all';
-  const requestId = nanoid();
+  const requestId = randomUUID();
   mainWindow.webContents.send('nested-archives', { requestId, archives });
   const selection = await new Promise<string[]>((resolve) => {
     pendingNestedResolvers.set(requestId, resolve);
