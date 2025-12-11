@@ -1,5 +1,5 @@
-appId: com.example.simsorganizer
-productName: Sims4ModsMover
+appId: com.example.modsmover
+productName: ModsMover
 directories:
   output: dist/release
   buildResources: build
@@ -14,5 +14,5 @@ win:
   target: portable
   icon: build/icon.ico
 portable:
-  artifactName: "SimsOrganizerPortable.exe"
+  artifactName: "ModsMoverPortable.exe"
 publish: null

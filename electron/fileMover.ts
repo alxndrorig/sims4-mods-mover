@@ -63,6 +63,9 @@ export async function moveFiles(
       const nestedResult = await scanFolder(extracted, config, log);
       const nestedOps = await moveFiles(nestedResult.items, config, log, onProgress);
       operations.push(...nestedOps);
+      // очищаем исходный архив и временную распаковку
+      await fs.remove(item.path).catch(() => undefined);
+      await fs.remove(extracted).catch(() => undefined);
       notify(item.path);
       continue;
     }
