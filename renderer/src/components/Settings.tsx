@@ -16,14 +16,15 @@ export default function Settings() {
     };
 
   const chooseFolder = async (key: keyof typeof config) => {
-    const chosen = await ipcClient.chooseFolder();
+    const current = config[key] as string;
+    const chosen = await ipcClient.chooseFolder(current);
     if (chosen) {
       await handlePathChange(key)(chosen);
     }
   };
 
   const chooseSimsRootAndFill = async () => {
-    const chosen = await ipcClient.chooseFolder();
+    const chosen = await ipcClient.chooseFolder(config.simsRoot);
     if (!chosen) return;
     setSaving(true);
     const next = {
@@ -48,21 +49,6 @@ export default function Settings() {
           />
           <button onClick={() => chooseFolder("sourceDir")}>Выбрать</button>
         </div>
-      </label>
-      <label className="grid" style={{ gap: 4 }}>
-        <span>Вложенные архивы (вариант обработки)</span>
-        <select
-          value={config.nestedArchiveMode || "all"}
-          onChange={(e) =>
-            updateConfig({ nestedArchiveMode: e.target.value as any })
-          }
-        >
-          <option value="all">Распаковывать все</option>
-          <option value="first">Распаковывать только первый вложенный</option>
-          <option value="skip">
-            Не распаковывать (перемещать архив как есть)
-          </option>
-        </select>
       </label>
       <label className="grid" style={{ gap: 4 }}>
         <span>Папка Sims 4 (Documents/Electronic Arts/The Sims 4)</span>
@@ -108,19 +94,14 @@ export default function Settings() {
         </div>
       </label>
       <label className="grid" style={{ gap: 4 }}>
-        <span>Вложенные архивы (вариант обработки)</span>
+        <span>Тема оформления</span>
         <select
-          value={config.nestedArchiveMode || "all"}
-          onChange={(e) =>
-            updateConfig({ nestedArchiveMode: e.target.value as any })
-          }
+          value={config.theme || "dark"}
+          onChange={(e) => updateConfig({ theme: e.target.value as any })}
         >
-          <option value="all">Распаковывать все</option>
-          <option value="first">Распаковывать только первый вложенный</option>
-          <option value="skip">
-            Не распаковывать (перемещать архив как есть)
-          </option>
-          <option value="prompt">Спрашивать при каждом архиве</option>
+          <option value="dark">Глубокая тёмная</option>
+          <option value="light">Светлая</option>
+          <option value="neon">Неон</option>
         </select>
       </label>
       <label
@@ -137,7 +118,7 @@ export default function Settings() {
         </span>
         <span
           className="badge"
-          style={{ background: config.watcherEnabled ? "#22c55e" : "#475569" }}
+          style={{ background: config.watcherEnabled ? "var(--accent)" : "var(--pill-bg)" }}
         >
           {config.watcherEnabled ? "Включен" : "Выкл"}
         </span>

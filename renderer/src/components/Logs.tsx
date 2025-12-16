@@ -5,9 +5,9 @@ interface Props {
 }
 
 const levelColor: Record<LogMessage['level'], string> = {
-  info: '#93c5fd',
+  info: 'var(--accent)',
   warn: '#fbbf24',
-  error: '#f87171'
+  error: 'var(--danger)'
 };
 
 export default function Logs({ logs }: Props) {
@@ -20,7 +20,7 @@ export default function Logs({ logs }: Props) {
             [{new Date(log.timestamp).toLocaleTimeString()}] {log.message}
           </div>
         ))}
-        {!logs.length && <div style={{ color: '#94a3b8' }}>Пока нет событий</div>}
+        {!logs.length && <div style={{ color: 'var(--muted)' }}>Пока нет событий</div>}
       </div>
     </div>
   );

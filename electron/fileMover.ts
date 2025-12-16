@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { extractArchive, findNestedArchives } from './archiveExtractor';
+import { extractArchive } from './archiveExtractor';
 import { scanFolder } from './fileScanner';
 import { Config, LogLevel, MoveOperation, ProgressEvent, ScanItem } from './types';
 
@@ -33,8 +33,7 @@ export async function moveFiles(
   items: ScanItem[],
   config: Config,
   log?: (message: string, level?: LogLevel) => void,
-  onProgress?: (event: ProgressEvent) => void,
-  requestNestedSelection?: (archives: string[]) => Promise<'all' | 'first' | 'skip' | { selected: string[] }>
+  onProgress?: (event: ProgressEvent) => void
 ): Promise<MoveOperation[]> {
   const operations: MoveOperation[] = [];
   let processed = 0;
@@ -61,6 +60,7 @@ export async function moveFiles(
 
     if (item.type === 'archive') {
       try {
+        log?.(`Распаковка архива ${item.path}`);
         const extracted = await extractArchive(item.path, config.tempDir, log);
         const nestedResult = await scanFolder(extracted, config, log);
         const nestedOps = await moveFiles(nestedResult.items, config, log, onProgress);
@@ -83,10 +83,15 @@ export async function moveFiles(
     }
 
     const dest = await uniquePath(path.dirname(targetBase), path.basename(targetBase));
-    await fs.ensureDir(path.dirname(dest));
-    await fs.move(item.path, dest, { overwrite: false });
-    operations.push({ from: item.path, to: dest, type: item.type });
-    log?.(`Перемещено ${item.path} -> ${dest}`);
+    try {
+      await fs.ensureDir(path.dirname(dest));
+      await fs.move(item.path, dest, { overwrite: false });
+      operations.push({ from: item.path, to: dest, type: item.type });
+      log?.(`Перемещено ${item.path} -> ${dest}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      log?.(`Ошибка перемещения ${item.path}: ${message}`, 'error');
+    }
     notify(dest);
   }
 

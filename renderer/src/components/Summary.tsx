@@ -33,7 +33,7 @@ export default function Summary({ summary, selected, onSelect }: Props) {
           <button
             key={type}
             style={{
-              background: selected === type ? '#1d4ed8' : '#1f2937'
+              background: selected === type ? 'var(--pill-active-bg)' : 'var(--pill-bg)'
             }}
             onClick={() => onSelect(type)}
           >

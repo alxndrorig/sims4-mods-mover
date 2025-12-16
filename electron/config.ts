@@ -15,7 +15,7 @@ const defaultConfig: Config = {
   savesDir: path.join(defaultSimsRoot, 'Saves'),
   tempDir: path.join(app.getPath('temp'), 'sims4-mods-mover'),
   watcherEnabled: false,
-  nestedArchiveMode: 'all'
+  theme: 'dark'
 };
 
 const configPath = path.join(app.getPath('userData'), 'config.json');

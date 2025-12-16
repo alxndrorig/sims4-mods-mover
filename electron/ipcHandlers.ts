@@ -5,7 +5,6 @@ import { moveFiles } from './fileMover';
 import { scanFolder } from './fileScanner';
 import { startWatcher, stopWatcher } from './watcher';
 import { Config, LogMessage, ScanItem } from './types';
-import { randomUUID } from 'node:crypto';
 
 let configCache: Config;
 
@@ -38,8 +37,7 @@ export async function registerIpcHandlers(mainWindow: BrowserWindow) {
       items,
       configCache,
       sendLog,
-      (event) => mainWindow.webContents.send('progress', event),
-      async (archives) => waitNestedSelection(mainWindow, archives)
+      (event) => mainWindow.webContents.send('progress', event)
     );
     return operations;
   });
@@ -63,18 +61,10 @@ export async function registerIpcHandlers(mainWindow: BrowserWindow) {
     return { enabled: false };
   });
 
-  ipcMain.handle('nested-archives-selection', async (_event, payload: { requestId: string; selected: string[] }) => {
-    const resolver = pendingNestedResolvers.get(payload.requestId);
-    if (resolver) {
-      resolver(payload.selected);
-      pendingNestedResolvers.delete(payload.requestId);
-    }
-    return;
-  });
-
-  ipcMain.handle('choose-folder', async () => {
+  ipcMain.handle('choose-folder', async (_event, defaultPath?: string) => {
     const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
-      properties: ['openDirectory']
+      properties: ['openDirectory'],
+      defaultPath
     });
     if (canceled || !filePaths[0]) return null;
     return filePaths[0];
@@ -85,26 +75,4 @@ export async function registerIpcHandlers(mainWindow: BrowserWindow) {
   if (configCache.watcherEnabled) {
     await startWatcher(configCache, mainWindow, sendLog);
   }
-}
-
-const pendingNestedResolvers = new Map<string, (selection: string[]) => void>();
-
-async function waitNestedSelection(mainWindow: BrowserWindow, archives: string[]): Promise<'all' | 'first' | 'skip'> {
-  if (!archives.length) return 'all';
-  const requestId = randomUUID();
-  mainWindow.webContents.send('nested-archives', { requestId, archives });
-  const selection = await new Promise<string[]>((resolve) => {
-    pendingNestedResolvers.set(requestId, resolve);
-    setTimeout(() => {
-      if (pendingNestedResolvers.has(requestId)) {
-        pendingNestedResolvers.delete(requestId);
-        resolve(archives); // default: all
-      }
-    }, 30000);
-  });
-  if (!selection) return 'all';
-  if (selection.length === 0) return 'skip'; // трактуем пустой выбор как пропуск
-  if (selection.length === 1 && selection[0] === '__all__') return 'all';
-  // если выбрано подмножество, будем использовать режим first, но фактически обрабатываем только выбранные ниже
-  return 'first';
 }

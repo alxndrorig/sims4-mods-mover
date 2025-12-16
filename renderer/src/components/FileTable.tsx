@@ -39,7 +39,7 @@ export default function FileTable({ items, typeFilter }: Props) {
             ))}
             {!items.length && (
               <tr>
-                <td colSpan={5} style={{ textAlign: 'center', color: '#94a3b8' }}>
+                <td colSpan={5} style={{ textAlign: 'center', color: 'var(--muted)' }}>
                   Нет файлов
                 </td>
               </tr>

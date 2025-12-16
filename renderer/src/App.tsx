@@ -5,7 +5,6 @@ import Summary from "./components/Summary";
 import FileTable from "./components/FileTable";
 import Settings from "./components/Settings";
 import ProgressBar from "./components/ProgressBar";
-import { NestedArchiveModal } from "./components/NestedArchiveModal";
 import { FileType } from "../../electron/types";
 
 function App() {
@@ -35,6 +34,11 @@ function App() {
   }, [init, setProgress, setSummary]);
 
   useEffect(() => {
+    const theme = config?.theme || "dark";
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [config?.theme]);
+
+  useEffect(() => {
     setFilter(selectedType);
   }, [selectedType, setFilter]);
 
@@ -44,7 +48,7 @@ function App() {
   }, [items, filter]);
 
   return (
-    <div style={{ padding: 16, color: "white" }}>
+    <div style={{ padding: 16, color: "var(--text)" }}>
       <h1>Sims 4 Mods Mover</h1>
       <p>
         Автосортировка модов/трей/сейвов The Sims 4 с предпросмотром и watcher.
@@ -52,7 +56,7 @@ function App() {
       {!hasIpc && (
         <div
           className="card"
-          style={{ borderColor: "#f97316", color: "#fde68a", marginBottom: 12 }}
+          style={{ borderColor: "var(--danger)", color: "var(--text)", marginBottom: 12 }}
         >
           <strong>IPC недоступен.</strong> Откройте приложение в окне Electron
           (npm run dev) — запуск только в браузере не подгружает preload и
@@ -91,7 +95,6 @@ function App() {
       <div className="card" style={{ marginBottom: 12 }}>
         <FileTable items={filteredItems} typeFilter={filter} />
       </div>
-      <NestedArchiveModal />
     </div>
   );
 }
