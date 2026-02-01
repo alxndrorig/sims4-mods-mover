@@ -1,0 +1,69 @@
+name: build-windows-signed
+
+# Этот workflow требует настройки секретов:
+# - WINDOWS_CERTIFICATE: Base64 закодированный .pfx файл
+# - WINDOWS_CERTIFICATE_PASSWORD: пароль от сертификата
+# 
+# Чтобы убрать предупреждение SmartScreen, нужен один из вариантов:
+# 1. EV Code Signing Certificate (~$200-400/год) - убирает сразу
+# 2. Standard Code Signing Certificate (~$70-200/год) - убирает после накопления репутации
+# 3. Azure Trusted Signing (бесплатно, но требует Azure подписку)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*'
+
+jobs:
+  build-win-signed:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build dist (portable exe)
+        run: npm run dist
+        env:
+          # Если у вас есть сертификат, раскомментируйте:
+          # CSC_LINK: ${{ secrets.WINDOWS_CERTIFICATE }}
+          # CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Альтернатива: подписать с помощью Windows SDK signtool
+      # - name: Sign executable
+      #   if: ${{ secrets.WINDOWS_CERTIFICATE != '' }}
+      #   shell: pwsh
+      #   run: |
+      #     # Декодируем сертификат
+      #     $certBytes = [Convert]::FromBase64String("${{ secrets.WINDOWS_CERTIFICATE }}")
+      #     $certPath = "${{ runner.temp }}\cert.pfx"
+      #     [IO.File]::WriteAllBytes($certPath, $certBytes)
+      #     
+      #     # Находим signtool
+      #     $signtool = Get-ChildItem -Path "C:\Program Files (x86)\Windows Kits\10\bin" -Recurse -Filter "signtool.exe" | 
+      #                  Where-Object { $_.FullName -match "x64" } | 
+      #                  Select-Object -First 1 -ExpandProperty FullName
+      #     
+      #     # Подписываем
+      #     & $signtool sign /f $certPath /p "${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}" `
+      #       /tr http://timestamp.digicert.com /td sha256 /fd sha256 `
+      #       "dist/release/ModsMoverPortable.exe"
+      #     
+      #     # Удаляем сертификат
+      #     Remove-Item $certPath -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ModsMoverPortable
+          path: dist/release/ModsMoverPortable.exe

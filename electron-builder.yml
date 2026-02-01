@@ -3,16 +3,65 @@ productName: ModsMover
 directories:
   output: dist/release
   buildResources: build
+
+# Включаем ASAR для упаковки файлов приложения (экономия ~30-40%)
+asar: true
+asarUnpack:
+  # 7zip-bin должен быть распакован, т.к. это нативные бинарники
+  - "**/node_modules/7zip-bin/**/*"
+
+# Оптимизированный список файлов для включения
 files:
-  - dist/**/*
+  - dist/electron/**/*
+  - dist/renderer/**/*
   - package.json
-asar: false
+  - node_modules/**/*
+  # Исключаем ненужные файлы
+  - "!node_modules/@types/**"
+  - "!node_modules/**/test/**"
+  - "!node_modules/**/tests/**"
+  - "!node_modules/**/*.md"
+  - "!node_modules/**/*.map"
+  - "!node_modules/**/LICENSE"
+  - "!node_modules/**/README*"
+  - "!node_modules/**/.bin/**"
+  # КРИТИЧНО: исключаем dist/release чтобы избежать рекурсии
+  - "!dist/release/**"
+
 extraResources:
   - from: config.json
     to: .
+
+# Windows конфигурация
 win:
-  target: portable
+  target: 
+    - target: portable
+      arch: [x64]
   icon: build/icon.ico
+  compression: maximum  # Максимальная компрессия
+  # Исключаем лишние бинарники из Windows билда
+  files:
+    - "!node_modules/7zip-bin/mac/**"
+    - "!node_modules/7zip-bin/linux/**"
+
+mac:
+  target: default
+  # Исключаем лишние бинарники из Mac билда
+  files:
+    - "!node_modules/7zip-bin/win/**"
+    - "!node_modules/7zip-bin/linux/**"
+
+linux:
+  target: AppImage
+  # Исключаем лишние бинарники из Linux билда
+  files:
+    - "!node_modules/7zip-bin/win/**"
+    - "!node_modules/7zip-bin/mac/**"
+
 portable:
   artifactName: "ModsMoverPortable.exe"
+
+# Компрессия для всех платформ
+compression: maximum
+
 publish: null

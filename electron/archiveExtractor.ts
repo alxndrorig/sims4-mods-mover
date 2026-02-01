@@ -14,29 +14,85 @@ async function extractWith7z(
 ): Promise<void> {
   await fs.ensureDir(dest);
   return new Promise((resolve, reject) => {
-    const stream = Seven.extractFull(archivePath, dest, { $bin: path7za, recursive: true });
+    log?.(`Начинаем распаковку: ${archivePath}`);
+    
+    // Опции для корректной работы с Unicode и большими архивами
+    const options = {
+      $bin: path7za,
+      recursive: true,
+      // Флаги для корректной обработки Unicode путей (русские символы)
+      charset: 'UTF-8',
+      // Переключатели для 7z
+      $raw: [
+        '-sccUTF-8', // Console output charset UTF-8
+        '-scsUTF-8', // Source archive charset UTF-8
+      ],
+      // Увеличиваем размер буфера для больших файлов
+      $spawnOptions: {
+        maxBuffer: 1024 * 1024 * 100, // 100MB buffer для stdout/stderr
+        windowsHide: true,
+      },
+    };
+
+    const stream = Seven.extractFull(archivePath, dest, options);
+    
+    let lastError: string | null = null;
+    
+    // Логируем прогресс для больших архивов
+    stream.on('progress', (progress: { percent: number; fileCount: number }) => {
+      if (progress.percent && progress.percent % 25 === 0) {
+        log?.(`Распаковка ${path.basename(archivePath)}: ${progress.percent}%`);
+      }
+    });
+
+    // Собираем данные об ошибках
+    stream.on('data', (data: { status?: string; file?: string }) => {
+      if (data.status && data.status.toLowerCase().includes('error')) {
+        lastError = data.file || data.status;
+      }
+    });
+
     stream.on('end', () => {
       log?.(`Распакован архив ${archivePath} -> ${dest}`);
       resolve();
     });
-    stream.on('error', (err: Error) => reject(err));
+
+    stream.on('error', (err: Error) => {
+      const errorMessage = lastError 
+        ? `Ошибка распаковки ${archivePath}: ${err.message}. Файл: ${lastError}`
+        : `Ошибка распаковки ${archivePath}: ${err.message}`;
+      log?.(errorMessage, 'error');
+      reject(new Error(errorMessage));
+    });
   });
 }
 
 export async function findNestedArchives(folder: string, seen: Set<string>): Promise<string[]> {
   const results: string[] = [];
-  const entries = await fs.readdir(folder, { withFileTypes: true });
-  for (const entry of entries) {
-    const full = path.join(folder, entry.name);
-    if (entry.isDirectory()) {
-      results.push(...(await findNestedArchives(full, seen)));
-    } else if (entry.isFile()) {
-      const ext = path.extname(entry.name).toLowerCase();
-      if (ARCHIVE_EXT.has(ext) && !seen.has(full)) {
-        results.push(full);
+  
+  try {
+    const entries = await fs.readdir(folder, { withFileTypes: true });
+    for (const entry of entries) {
+      try {
+        const full = path.join(folder, entry.name);
+        if (entry.isDirectory()) {
+          results.push(...(await findNestedArchives(full, seen)));
+        } else if (entry.isFile()) {
+          const ext = path.extname(entry.name).toLowerCase();
+          if (ARCHIVE_EXT.has(ext) && !seen.has(full)) {
+            results.push(full);
+          }
+        }
+      } catch (entryError) {
+        // Пропускаем проблемные файлы (например, с некорректными именами)
+        console.warn(`Не удалось обработать файл в ${folder}:`, entry.name, entryError);
       }
     }
+  } catch (error) {
+    // Если не удалось прочитать директорию, возвращаем пустой массив
+    console.warn(`Не удалось прочитать директорию ${folder}:`, error);
   }
+  
   return results;
 }
 
