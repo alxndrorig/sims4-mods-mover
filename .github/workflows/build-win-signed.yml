@@ -15,6 +15,19 @@ on:
     branches: [ main, master ]
     tags:
       - 'v*'
+    paths:
+      - 'electron/**'
+      - 'renderer/**'
+      - 'build/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig*.json'
+      - 'vite.config.ts'
+      - 'electron-builder.yml'
+      - '.github/workflows/build-win-signed.yml'
+
+permissions:
+  contents: write
 
 jobs:
   build-win-signed:
@@ -67,3 +80,9 @@ jobs:
         with:
           name: ModsMoverPortable
           path: dist/release/ModsMoverPortable.exe
+
+      - name: Publish release asset
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/release/ModsMoverPortable.exe

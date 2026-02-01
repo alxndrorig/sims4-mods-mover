@@ -4,7 +4,27 @@ on:
   workflow_dispatch:
   push:
     branches: [ main, master ]
+    paths:
+      - 'electron/**'
+      - 'renderer/**'
+      - 'build/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig*.json'
+      - 'vite.config.ts'
+      - 'electron-builder.yml'
+      - '.github/workflows/build-win.yml'
   pull_request:
+    paths:
+      - 'electron/**'
+      - 'renderer/**'
+      - 'build/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig*.json'
+      - 'vite.config.ts'
+      - 'electron-builder.yml'
+      - '.github/workflows/build-win.yml'
 
 jobs:
   build-win:
