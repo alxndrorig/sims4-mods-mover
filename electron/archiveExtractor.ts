@@ -1,9 +1,8 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { path7za } from '7zip-bin';
+import { spawn } from 'child_process';
 import { LogLevel } from './types';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const Seven = require('node-7z');
 
 const ARCHIVE_EXT = new Set(['.zip', '.rar', '.7z']);
 
@@ -19,64 +18,60 @@ async function extractWith7z(
 
   return new Promise((resolve, reject) => {
     log?.(`Начинаем распаковку: ${archivePath}`);
-    
-    // Опции для корректной работы с Unicode и большими архивами
-    const options = {
-      $bin: sevenZipBinPath,
-      recursive: true,
-      // Флаги для корректной обработки Unicode путей (русские символы)
-      charset: 'UTF-8',
-      // Переключатели для 7z
-      $raw: [
-        '-sccUTF-8', // Console output charset UTF-8
-        '-scsUTF-8', // Source archive charset UTF-8
-      ],
-      // Увеличиваем размер буфера для больших файлов
-      $spawnOptions: {
-        maxBuffer: 1024 * 1024 * 100, // 100MB buffer для stdout/stderr
-        windowsHide: true,
-      },
-    };
 
-    const stream = Seven.extractFull(archivePath, dest, options);
+    const args = [
+      'x',
+      archivePath,
+      `-o${dest}`,
+      '-y',
+      '-bsp1',
+      '-bb1',
+      '-sccUTF-8'
+    ];
 
-    let lastError: string | null = null;
-    let settled = false;
-    
-    // Логируем прогресс для больших архивов
-    stream.on('progress', (progress: { percent: number; fileCount: number }) => {
-      if (progress.percent && progress.percent % 25 === 0) {
-        log?.(`Распаковка ${path.basename(archivePath)}: ${progress.percent}%`);
+    const child = spawn(sevenZipBinPath, args, {
+      windowsHide: true
+    });
+
+    let stderrText = '';
+    let stdoutTail = '';
+    let lastLoggedPercent = -25;
+
+    child.stdout.on('data', (chunk: Buffer) => {
+      const text = chunk.toString('utf8');
+      stdoutTail = `${stdoutTail}${text}`.slice(-8000);
+      const percentMatch = text.match(/(\d{1,3})%/g);
+      if (!percentMatch) return;
+      const last = percentMatch[percentMatch.length - 1];
+      const value = Number.parseInt(last.replace('%', ''), 10);
+      if (Number.isFinite(value) && value >= lastLoggedPercent + 25) {
+        lastLoggedPercent = value;
+        log?.(`Распаковка ${path.basename(archivePath)}: ${value}%`);
       }
     });
 
-    // Собираем данные об ошибках
-    stream.on('data', (data: { status?: string; file?: string }) => {
-      if (data.status && data.status.toLowerCase().includes('error')) {
-        lastError = data.file || data.status;
-      }
+    child.stderr.on('data', (chunk: Buffer) => {
+      stderrText += chunk.toString('utf8');
     });
 
-    stream.on('end', () => {
-      if (settled) return;
-      if (lastError) {
-        settled = true;
-        const errorMessage = `Ошибка распаковки ${archivePath}: ${lastError}`;
-        log?.(errorMessage, 'error');
-        reject(new Error(errorMessage));
+    child.on('error', (err) => {
+      const details = `${err.message}${stderrText ? ` | stderr: ${stderrText.trim()}` : ''}`;
+      const errorMessage = `Ошибка распаковки ${archivePath}: ${details}`;
+      log?.(errorMessage, 'error');
+      reject(new Error(errorMessage));
+    });
+
+    child.on('close', (code) => {
+      if (code === 0) {
+        log?.(`Распакован архив ${archivePath} -> ${dest}`);
+        resolve();
         return;
       }
-      settled = true;
-      log?.(`Распакован архив ${archivePath} -> ${dest}`);
-      resolve();
-    });
 
-    stream.on('error', (err: Error) => {
-      if (settled) return;
-      settled = true;
-      const errorMessage = lastError 
-        ? `Ошибка распаковки ${archivePath}: ${err.message}. Файл: ${lastError}`
-        : `Ошибка распаковки ${archivePath}: ${err.message}`;
+      const stderrClean = stderrText.trim();
+      const stdoutClean = stdoutTail.trim();
+      const details = stderrClean || stdoutClean || `код выхода 7z: ${String(code)}`;
+      const errorMessage = `Ошибка распаковки ${archivePath}: ${details}`;
       log?.(errorMessage, 'error');
       reject(new Error(errorMessage));
     });
