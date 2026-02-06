@@ -13,12 +13,16 @@ async function extractWith7z(
   log?: (message: string, level?: LogLevel) => void
 ): Promise<void> {
   await fs.ensureDir(dest);
+  const sevenZipBinPath = path7za.includes('app.asar')
+    ? path7za.replace('app.asar', 'app.asar.unpacked')
+    : path7za;
+
   return new Promise((resolve, reject) => {
     log?.(`Начинаем распаковку: ${archivePath}`);
     
     // Опции для корректной работы с Unicode и большими архивами
     const options = {
-      $bin: path7za,
+      $bin: sevenZipBinPath,
       recursive: true,
       // Флаги для корректной обработки Unicode путей (русские символы)
       charset: 'UTF-8',
@@ -35,8 +39,9 @@ async function extractWith7z(
     };
 
     const stream = Seven.extractFull(archivePath, dest, options);
-    
+
     let lastError: string | null = null;
+    let settled = false;
     
     // Логируем прогресс для больших архивов
     stream.on('progress', (progress: { percent: number; fileCount: number }) => {
@@ -53,11 +58,22 @@ async function extractWith7z(
     });
 
     stream.on('end', () => {
+      if (settled) return;
+      if (lastError) {
+        settled = true;
+        const errorMessage = `Ошибка распаковки ${archivePath}: ${lastError}`;
+        log?.(errorMessage, 'error');
+        reject(new Error(errorMessage));
+        return;
+      }
+      settled = true;
       log?.(`Распакован архив ${archivePath} -> ${dest}`);
       resolve();
     });
 
     stream.on('error', (err: Error) => {
+      if (settled) return;
+      settled = true;
       const errorMessage = lastError 
         ? `Ошибка распаковки ${archivePath}: ${err.message}. Файл: ${lastError}`
         : `Ошибка распаковки ${archivePath}: ${err.message}`;
