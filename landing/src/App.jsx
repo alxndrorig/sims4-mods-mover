@@ -267,11 +267,6 @@ const App = () => {
                   Один клик — и никакой рутины.
                 </p>
               </div>
-              
-              <div className="absolute bottom-10 flex flex-col items-center text-sm font-medium tracking-widest uppercase text-white animate-bounce drop-shadow-lg z-10">
-                <span>Крути колесико</span>
-                <ChevronDown className="mt-2 text-neon-green" />
-              </div>
             </section>
 
             {/* PANEL 2: FEATURES (Оазис Спрингс) */}
@@ -384,7 +379,7 @@ const App = () => {
                   ))}
                 </div>
 
-                <footer className="mt-auto pt-8 md:pt-12 pb-6 text-slate-300 text-xs md:text-sm flex gap-4 md:gap-6 justify-center w-full drop-shadow-md shrink-0">
+                <footer className="mt-auto pt-16 md:pt-32 pb-8 md:pb-12 text-slate-300 text-xs md:text-sm flex gap-4 md:gap-6 justify-center w-full drop-shadow-md shrink-0">
                   <span>&copy; 2026 ModsMover</span>
                   <a href="https://t.me/+fW2-EvOkkEQ4MGNi" target="_blank" rel="noopener noreferrer" className="hover:text-neon-green transition-colors font-medium">Telegram</a>
                   <a href="https://www.donationalerts.com/r/alxndrorig" target="_blank" rel="noopener noreferrer" className="hover:text-neon-green transition-colors font-medium">Донаты</a>
