@@ -142,7 +142,7 @@ const Plumbob = () => {
 
 // Horizontal Scroll Layout & Plumbob Scene
 const PlumbobScene = () => (
-  <div className="absolute inset-0 z-10 pointer-events-none h-full w-full overflow-hidden">
+  <div className="fixed md:absolute inset-0 z-10 pointer-events-none h-screen md:h-full w-full overflow-hidden">
     <Canvas camera={{ position: [0, 0, 10], fov: 45 }} dpr={[1, 2]} gl={{ antialias: true }}>
       <ambientLight intensity={1} color="#ffffff" />
       <directionalLight position={[10, 10, 10]} intensity={2} color="#ffffff" />
@@ -158,11 +158,13 @@ const App = () => {
   const containerRef = useRef();
 
   useEffect(() => {
-    // Initialization of GSAP for horizontal scroll
-    const ctx = gsap.context(() => {
+    // Initialization of GSAP matchMedia for responsive animations
+    let mm = gsap.matchMedia();
+
+    // Desktop: Horizontal Scroll
+    mm.add("(min-width: 768px)", () => {
       const wrapper = document.querySelector('.horizontal-wrapper');
       const panels = gsap.utils.toArray('.horizontal-panel');
-
       const bgs = gsap.utils.toArray('.bg-crossfade-img');
       const totalPanels = panels.length;
 
@@ -189,10 +191,30 @@ const App = () => {
       if (bgs[1]) tl.to(bgs[1], { opacity: 1, ease: 'none', duration: 1 }, 0);
       if (bgs[2]) tl.to(bgs[2], { opacity: 1, ease: 'none', duration: 1 }, 1);
       if (bgs[3]) tl.to(bgs[3], { opacity: 1, ease: 'none', duration: 1 }, 2);
+    });
 
-    }, containerRef);
+    // Mobile: Vertical Scroll
+    mm.add("(max-width: 767px)", () => {
+      const panels = gsap.utils.toArray('.horizontal-panel');
+      const bgs = gsap.utils.toArray('.bg-crossfade-img');
 
-    return () => ctx.revert();
+      panels.forEach((panel, i) => {
+        if (i === 0) return; // background 1 is already visible
+
+        gsap.to(bgs[i], {
+          opacity: 1,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: panel,
+            start: "top 60%", // Fade starts when the top of the panel is 60% down the screen
+            end: "top 20%",   // Fades completely by the time the top is 20% down
+            scrub: true,
+          }
+        });
+      });
+    });
+
+    return () => mm.revert();
   }, []);
 
   const handleDownload = () => {
@@ -214,10 +236,10 @@ const App = () => {
       <div className="relative font-sans text-slate-300 w-full overflow-x-hidden bg-black">
         
         {/* --- HORIZONTAL SCROLL CONTAINER --- */}
-        <div ref={containerRef} className="w-full h-screen overflow-hidden relative">
+        <div ref={containerRef} className="w-full h-auto md:h-screen overflow-visible md:overflow-hidden relative">
           
           {/* --- LAYER 0: BACKGROUNDS --- */}
-          <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
+          <div className="fixed md:absolute inset-0 w-full h-screen md:h-full z-0 pointer-events-none">
             <div className="bg-crossfade-img absolute inset-0 bg-cover bg-center filter brightness-50" style={{ backgroundImage: `url(${bg1})`, opacity: 1, zIndex: 1 }}></div>
             <div className="bg-crossfade-img absolute inset-0 bg-cover bg-center filter brightness-50" style={{ backgroundImage: `url(${bg2})`, opacity: 0, zIndex: 2 }}></div>
             <div className="bg-crossfade-img absolute inset-0 bg-cover bg-center filter brightness-50" style={{ backgroundImage: `url(${bg3})`, opacity: 0, zIndex: 3 }}></div>
@@ -228,20 +250,20 @@ const App = () => {
           <PlumbobScene />
 
           {/* --- LAYER 2: TEXT/PANELS --- */}
-          <div className="horizontal-wrapper relative flex flex-row w-[400vw] h-full z-20 pointer-events-auto">
+          <div className="horizontal-wrapper relative flex flex-col md:flex-row w-full md:w-[400vw] h-auto md:h-full z-20 pointer-events-auto">
             
             {/* PANEL 1: HERO (Виллоу Крик) */}
-            <section className="horizontal-panel w-screen h-screen flex-shrink-0 relative flex items-center justify-center overflow-hidden">
+            <section className="horizontal-panel w-full md:w-screen min-h-screen md:h-screen flex-shrink-0 relative flex items-center justify-center overflow-hidden">
               
               <div className="text-center relative px-4 w-full">
                 <div className="absolute inset-x-0 mx-auto w-full h-[60vh] bg-dark-navy/60 blur-[40px] rounded-full z-[-1] pointer-events-none" />
                 
-                <h1 className="text-5xl md:text-8xl font-black text-white mb-6 drop-shadow-2xl tracking-tight z-10">
+                <h1 className="text-5xl md:text-8xl font-black text-white mb-4 md:mb-6 drop-shadow-2xl tracking-tight z-10 leading-tight">
                   Наведи порядок в <br />
-                  <span className="neon-text-green text-neon-green-glow inline-block mt-4">The Sims 4</span>
-</h1>
+                  <span className="neon-text-green text-neon-green-glow inline-block mt-2 md:mt-4">The Sims 4</span>
+                </h1>
                 
-                <p className="inline-block text-xl md:text-3xl text-slate-200 drop-shadow-xl font-medium bg-dark-navy/80 px-10 py-4 mt-8 rounded-full backdrop-blur-md border border-white/10 z-10">
+                <p className="inline-block text-lg md:text-3xl text-slate-200 drop-shadow-xl font-medium bg-dark-navy/80 px-6 md:px-10 py-3 md:py-4 mt-6 md:mt-8 rounded-[2rem] md:rounded-full backdrop-blur-md border border-white/10 z-10">
                   Один клик — и никакой рутины.
                 </p>
               </div>
@@ -253,47 +275,47 @@ const App = () => {
             </section>
 
             {/* PANEL 2: FEATURES (Оазис Спрингс) */}
-            <section className="horizontal-panel w-screen h-screen flex-shrink-0 relative flex items-center justify-center overflow-hidden">
+            <section className="horizontal-panel w-full md:w-screen min-h-screen md:h-screen flex-shrink-0 relative flex items-center justify-center overflow-hidden">
               
-              <div className="max-w-7xl mx-auto w-full px-4 md:px-12 grid md:grid-cols-2 gap-16 items-center h-full overflow-y-auto pb-20 pt-[25vh]">
+              <div className="max-w-7xl mx-auto w-full px-4 md:px-12 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center h-full overflow-y-auto pb-24 md:pb-20 pt-[15vh] md:pt-[25vh]">
                 
-                <div className="space-y-8 my-auto pr-8">
-                  <div className="glass-dark p-10 rounded-[2rem] border border-white/10 shadow-2xl backdrop-blur-md">
-                    <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-4">
+                <div className="space-y-4 md:space-y-8 my-auto md:pr-8 mt-auto md:mt-auto">
+                  <div className="glass-dark p-6 md:p-10 rounded-3xl md:rounded-[2rem] border border-white/10 shadow-2xl backdrop-blur-md">
+                    <h2 className="text-3xl md:text-5xl font-extrabold text-white mb-2 md:mb-4">
                       Технологии <span className="neon-text-green">будущего</span>
                     </h2>
-                    <p className="text-xl text-slate-300">
+                    <p className="text-lg md:text-xl text-slate-300">
                       Рутинная установка модов осталась в прошлом. Мы создали инструмент, который всё делает за вас.
                     </p>
                   </div>
                 </div>
 
-                <div className="space-y-6 my-auto">
-                  <div className="glass-dark p-6 rounded-2xl flex gap-6 items-start backdrop-blur-md">
-                    <div className="bg-neon-green/10 p-4 rounded-xl text-neon-green drop-shadow-[0_0_10px_rgba(132,204,22,0.8)]">
-                      <Rocket size={32} />
+                <div className="space-y-4 md:space-y-6 my-auto mb-auto md:mb-auto">
+                  <div className="glass-dark p-5 md:p-6 rounded-2xl flex gap-4 md:gap-6 items-start backdrop-blur-md">
+                    <div className="bg-neon-green/10 p-3 md:p-4 rounded-xl text-neon-green drop-shadow-[0_0_10px_rgba(132,204,22,0.8)] shrink-0">
+                      <Rocket className="w-6 h-6 md:w-8 md:h-8" />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-bold text-white mb-1">Кибер-сортировка</h3>
-                      <p className="text-slate-300">Алгоритм мгновенно определяет тип контента и раскладывает по папкам.</p>
+                      <h3 className="text-xl md:text-2xl font-bold text-white mb-1">Кибер-сортировка</h3>
+                      <p className="text-sm md:text-base text-slate-300">Алгоритм мгновенно определяет тип контента и раскладывает по папкам.</p>
                     </div>
                   </div>
-                  <div className="glass-dark p-6 rounded-2xl flex gap-6 items-start backdrop-blur-md">
-                    <div className="bg-neon-green/10 p-4 rounded-xl text-neon-green drop-shadow-[0_0_10px_rgba(132,204,22,0.8)]">
-                      <Archive size={32} />
+                  <div className="glass-dark p-5 md:p-6 rounded-2xl flex gap-4 md:gap-6 items-start backdrop-blur-md">
+                    <div className="bg-neon-green/10 p-3 md:p-4 rounded-xl text-neon-green drop-shadow-[0_0_10px_rgba(132,204,22,0.8)] shrink-0">
+                      <Archive className="w-6 h-6 md:w-8 md:h-8" />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-bold text-white mb-1">Авто-распаковка</h3>
-                      <p className="text-slate-300">Забудьте про извлечение из архивов — ModsMover сделает всё сам.</p>
+                      <h3 className="text-xl md:text-2xl font-bold text-white mb-1">Авто-распаковка</h3>
+                      <p className="text-sm md:text-base text-slate-300">Забудьте про извлечение из архивов — ModsMover сделает всё сам.</p>
                     </div>
                   </div>
-                  <div className="glass-dark p-6 rounded-2xl flex gap-6 items-start backdrop-blur-md">
-                    <div className="bg-neon-green/10 p-4 rounded-xl text-neon-green drop-shadow-[0_0_10px_rgba(132,204,22,0.8)]">
-                      <ShieldCheck size={32} />
+                  <div className="glass-dark p-5 md:p-6 rounded-2xl flex gap-4 md:gap-6 items-start backdrop-blur-md">
+                    <div className="bg-neon-green/10 p-3 md:p-4 rounded-xl text-neon-green drop-shadow-[0_0_10px_rgba(132,204,22,0.8)] shrink-0">
+                      <ShieldCheck className="w-6 h-6 md:w-8 md:h-8" />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-bold text-white mb-1">Блокировка дублей</h3>
-                      <p className="text-slate-300">Защищает игру от тормозов, блокируя повторную установку.</p>
+                      <h3 className="text-xl md:text-2xl font-bold text-white mb-1">Блокировка дублей</h3>
+                      <p className="text-sm md:text-base text-slate-300">Защищает игру от тормозов, блокируя повторную установку.</p>
                     </div>
                   </div>
                 </div>
@@ -302,25 +324,25 @@ const App = () => {
             </section>
 
             {/* PANEL 3: HOW IT WORKS (Винденбург) */}
-            <section className="horizontal-panel w-screen h-screen flex-shrink-0 relative flex flex-col justify-center overflow-hidden">
+            <section className="horizontal-panel w-full md:w-screen min-h-screen md:h-screen flex-shrink-0 relative flex flex-col justify-center overflow-hidden">
               
-              <div className="max-w-7xl mx-auto w-full px-4 md:px-12 h-full flex flex-col justify-center overflow-y-auto pb-20 pt-[25vh]">
-                <div className="text-center mb-16">
-                  <h2 className="text-4xl md:text-6xl font-extrabold text-white mb-4 drop-shadow-xl">
+              <div className="max-w-7xl mx-auto w-full px-4 md:px-12 h-full flex flex-col md:justify-center overflow-y-auto pb-24 md:pb-20 pt-[15vh] md:pt-[25vh]">
+                <div className="text-center mb-8 md:mb-16 shrink-0">
+                  <h2 className="text-3xl md:text-4xl lg:text-6xl font-extrabold text-white mb-2 md:mb-4 drop-shadow-xl">
                     Путь к порядку <span className="neon-text-green">прост</span>
                   </h2>
-                  <p className="text-2xl text-slate-200 drop-shadow-xl font-medium">Всего 3 шага — и ваша игра готова.</p>
+                  <p className="text-lg md:text-2xl text-slate-200 drop-shadow-xl font-medium">Всего 3 шага — и ваша игра готова.</p>
                 </div>
-                <div className="grid md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8 pb-10 md:pb-0">
                   {[
                     { num: "01", title: "Скачайте моды", text: "Сохраняйте паки откуда угодно (Patreon, TSR)." },
                     { num: "02", title: "Укажите папку", text: "ModsMover один раз запомнит ваши настройки." },
                     { num: "03", title: "Играйте", text: "Просто нажмите кнопку. Файлы разложатся за секунду!" },
                   ].map((step, i) => (
-                    <div key={i} className="glass-dark p-10 rounded-3xl relative overflow-hidden group hover:border-neon-green/50 transition-colors backdrop-blur-md">
-                      <div className="w-16 h-16 rounded-full bg-neon-green text-black flex items-center justify-center font-black text-2xl mb-6">{i+1}</div>
-                      <h3 className="text-3xl font-bold text-white mb-4">{step.title}</h3>
-                      <p className="text-lg text-slate-300">{step.text}</p>
+                    <div key={i} className="glass-dark p-6 md:p-10 rounded-3xl relative overflow-hidden group hover:border-neon-green/50 transition-colors backdrop-blur-md">
+                      <div className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-neon-green text-black flex items-center justify-center font-black text-xl md:text-2xl mb-4 md:mb-6">{i+1}</div>
+                      <h3 className="text-2xl md:text-3xl font-bold text-white mb-2 md:mb-4">{step.title}</h3>
+                      <p className="text-base md:text-lg text-slate-300">{step.text}</p>
                     </div>
                   ))}
                 </div>
@@ -328,41 +350,41 @@ const App = () => {
             </section>
 
             {/* PANEL 4: FINAL CTA (Сан Мишуно) */}
-            <section className="horizontal-panel w-screen h-screen flex-shrink-0 relative flex flex-col items-center justify-center overflow-hidden">
+            <section className="horizontal-panel w-full md:w-screen min-h-screen md:h-screen flex-shrink-0 relative flex flex-col items-center justify-center overflow-hidden">
               
-              <div className="max-w-4xl mx-auto w-full px-4 flex flex-col h-full overflow-y-auto pb-10 pt-[15vh]">
-                <div className="glass-dark p-8 md:p-12 rounded-[2rem] text-center w-full border border-neon-green/20 relative overflow-hidden backdrop-blur-md shrink-0">
+              <div className="max-w-4xl mx-auto w-full px-4 flex flex-col h-full overflow-y-auto pb-24 md:pb-10 pt-[15vh]">
+                <div className="glass-dark p-6 md:p-12 rounded-[2rem] text-center w-full border border-neon-green/20 relative overflow-hidden backdrop-blur-md shrink-0">
                   <div className="absolute inset-0 bg-neon-green/10 blur-3xl pointer-events-none"></div>
                   
-                  <h2 className="text-4xl md:text-6xl font-black text-white mb-6 relative z-10 drop-shadow-lg">
+                  <h2 className="text-3xl md:text-6xl font-black text-white mb-4 md:mb-6 relative z-10 drop-shadow-lg leading-tight">
                     Готовы <span className="neon-text-green">обновиться?</span>
                   </h2>
                   
-                  <button onClick={handleDownload} className="relative z-10 group inline-flex items-center gap-4 bg-neon-green hover:bg-[#94d925] text-slate-900 font-bold text-2xl px-12 py-6 rounded-full transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(163,230,53,0.4)]">
-                    <Download size={28} className="group-hover:translate-y-1 transition-transform" />
+                  <button onClick={handleDownload} className="relative z-10 group inline-flex items-center gap-3 md:gap-4 bg-neon-green hover:bg-[#94d925] text-slate-900 font-bold text-lg md:text-2xl px-8 py-4 md:px-12 md:py-6 rounded-full transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(163,230,53,0.4)]">
+                    <Download className="w-6 h-6 md:w-7 md:h-7 group-hover:translate-y-1 transition-transform" />
                     Скачать бесплатно
                   </button>
                 </div>
 
-                <div className="mt-12 w-full space-y-4">
+                <div className="mt-8 md:mt-12 w-full space-y-3 md:space-y-4 shrink-0">
                   {[
                     { q: "Поддерживается ли пиратка?", a: "Да, работает на любых версиях игры с папкой Electronic Arts." },
                     { q: "Абсолютно бесплатно?", a: "Да, без рекламы и донатных стен. Инструмент от фанатов для фанатов." },
                     { q: "Безопасно?", a: "Приложение просто перемещает файлы в стандартные папки игры." }
                   ].map((faq, i) => (
                     <details key={i} className="glass-dark rounded-2xl group [&_summary::-webkit-details-marker]:hidden bg-dark-navy/90 border-white/5 backdrop-blur-md">
-                      <summary className="cursor-pointer p-6 font-semibold text-xl text-white flex justify-between items-center outline-none">
+                      <summary className="cursor-pointer p-4 md:p-6 font-semibold text-base md:text-xl text-white flex justify-between items-center outline-none">
                         {faq.q}
-                        <ChevronDown className="group-open:rotate-180 transition-transform text-neon-green" />
+                        <ChevronDown className="group-open:rotate-180 transition-transform text-neon-green shrink-0 ml-4" />
                       </summary>
-                      <div className="p-6 pt-0 text-slate-300 border-t border-white/5 mt-2">
+                      <div className="p-4 md:p-6 pt-0 text-sm md:text-base text-slate-300 border-t border-white/5 mt-2">
                         {faq.a}
                       </div>
                     </details>
                   ))}
                 </div>
 
-                <footer className="mt-auto pt-12 pb-6 text-slate-300 text-sm flex gap-6 justify-center w-full drop-shadow-md">
+                <footer className="mt-auto pt-8 md:pt-12 pb-6 text-slate-300 text-xs md:text-sm flex gap-4 md:gap-6 justify-center w-full drop-shadow-md shrink-0">
                   <span>&copy; 2026 ModsMover</span>
                   <a href="https://t.me/+fW2-EvOkkEQ4MGNi" target="_blank" rel="noopener noreferrer" className="hover:text-neon-green transition-colors font-medium">Telegram</a>
                   <a href="https://www.donationalerts.com/r/alxndrorig" target="_blank" rel="noopener noreferrer" className="hover:text-neon-green transition-colors font-medium">Донаты</a>
