@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+@theme {
+  --color-neon-green: #84cc16;
+  --color-neon-green-glow: #a3e635;
+  --color-dark-navy: #020617;
+  --font-sans: 'Inter', sans-serif;
+}
+
+body {
+  background-color: var(--color-dark-navy);
+  color: var(--color-slate-300);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.neon-text-green {
+  text-shadow: 0 0 10px rgba(132, 204, 22, 0.5), 0 0 20px rgba(132, 204, 22, 0.3);
+}
+
+.grid-bg-slow {
+  background-image: 
+    linear-gradient(rgba(163, 230, 53, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(163, 230, 53, 0.05) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-position: center;
+}
+
+::selection {
+  background-color: var(--color-neon-green);
+  color: #000;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background-color: var(--color-slate-900);
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-lime-600);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-lime-500);
+}
