@@ -272,7 +272,7 @@ const App = () => {
             {/* PANEL 2: FEATURES (Оазис Спрингс) */}
             <section className="horizontal-panel w-full md:w-screen min-h-screen md:h-screen flex-shrink-0 relative flex items-center justify-center overflow-hidden">
               
-              <div className="max-w-7xl mx-auto w-full px-4 md:px-12 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center h-full overflow-y-auto pb-24 md:pb-20 pt-[15vh] md:pt-[25vh]">
+              <div className="max-w-7xl mx-auto w-full px-4 md:px-12 grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center pb-24 md:pb-0 pt-[15vh] md:pt-0 z-10">
                 
                 <div className="space-y-4 md:space-y-8 my-auto md:pr-8 mt-auto md:mt-auto">
                   <div className="glass-dark p-6 md:p-10 rounded-3xl md:rounded-[2rem] border border-white/10 shadow-2xl backdrop-blur-md">
@@ -321,7 +321,7 @@ const App = () => {
             {/* PANEL 3: HOW IT WORKS (Винденбург) */}
             <section className="horizontal-panel w-full md:w-screen min-h-screen md:h-screen flex-shrink-0 relative flex flex-col justify-center overflow-hidden">
               
-              <div className="max-w-7xl mx-auto w-full px-4 md:px-12 h-full flex flex-col md:justify-center overflow-y-auto pb-24 md:pb-20 pt-[15vh] md:pt-[25vh]">
+              <div className="max-w-7xl mx-auto w-full px-4 md:px-12 flex flex-col md:justify-center pb-24 md:pb-0 pt-[15vh] md:pt-0 z-10">
                 <div className="text-center mb-8 md:mb-16 shrink-0">
                   <h2 className="text-3xl md:text-4xl lg:text-6xl font-extrabold text-white mb-2 md:mb-4 drop-shadow-xl">
                     Путь к порядку <span className="neon-text-green">прост</span>
@@ -347,8 +347,8 @@ const App = () => {
             {/* PANEL 4: FINAL CTA (Сан Мишуно) */}
             <section className="horizontal-panel w-full md:w-screen min-h-screen md:h-screen flex-shrink-0 relative flex flex-col items-center justify-center overflow-hidden">
               
-              <div className="max-w-4xl mx-auto w-full px-4 flex flex-col h-full overflow-y-auto pb-24 md:pb-10 pt-[15vh]">
-                <div className="glass-dark p-6 md:p-12 rounded-[2rem] text-center w-full border border-neon-green/20 relative overflow-hidden backdrop-blur-md shrink-0">
+              <div className="max-w-4xl mx-auto w-full px-4 flex flex-col justify-center pb-32 md:pb-16 pt-[15vh] md:pt-0 z-10">
+                <div className="glass-dark p-6 md:p-12 rounded-[2rem] text-center w-full border border-neon-green/20 relative overflow-hidden backdrop-blur-md">
                   <div className="absolute inset-0 bg-neon-green/10 blur-3xl pointer-events-none"></div>
                   
                   <h2 className="text-3xl md:text-6xl font-black text-white mb-4 md:mb-6 relative z-10 drop-shadow-lg leading-tight">
@@ -361,7 +361,7 @@ const App = () => {
                   </button>
                 </div>
 
-                <div className="mt-8 md:mt-12 w-full space-y-3 md:space-y-4 shrink-0">
+                <div className="mt-8 md:mt-12 w-full space-y-3 md:space-y-4">
                   {[
                     { q: "Поддерживается ли пиратка?", a: "Да, работает на любых версиях игры с папкой Electronic Arts." },
                     { q: "Абсолютно бесплатно?", a: "Да, без рекламы и донатных стен. Инструмент от фанатов для фанатов." },
@@ -378,13 +378,14 @@ const App = () => {
                     </details>
                   ))}
                 </div>
-
-                <footer className="mt-auto pt-16 md:pt-32 pb-8 md:pb-12 text-slate-300 text-xs md:text-sm flex gap-4 md:gap-6 justify-center w-full drop-shadow-md shrink-0">
-                  <span>&copy; 2026 ModsMover</span>
-                  <a href="https://t.me/+fW2-EvOkkEQ4MGNi" target="_blank" rel="noopener noreferrer" className="hover:text-neon-green transition-colors font-medium">Telegram</a>
-                  <a href="https://www.donationalerts.com/r/alxndrorig" target="_blank" rel="noopener noreferrer" className="hover:text-neon-green transition-colors font-medium">Донаты</a>
-                </footer>
               </div>
+
+              {/* Absolute Footer positioned at the bottom of the section */}
+              <footer className="absolute bottom-6 md:bottom-10 inset-x-0 w-full text-slate-300 text-xs md:text-sm flex gap-4 md:gap-6 justify-center drop-shadow-md z-10">
+                <span>&copy; 2026 ModsMover</span>
+                <a href="https://t.me/+fW2-EvOkkEQ4MGNi" target="_blank" rel="noopener noreferrer" className="hover:text-neon-green transition-colors font-medium">Telegram</a>
+                <a href="https://www.donationalerts.com/r/alxndrorig" target="_blank" rel="noopener noreferrer" className="hover:text-neon-green transition-colors font-medium">Донаты</a>
+              </footer>
             </section>
 
           </div>
